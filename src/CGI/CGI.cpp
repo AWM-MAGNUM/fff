@@ -377,6 +377,7 @@ bool CGI::initializePipes(int pipeIn[2], int pipeOut[2]) {
 }
 
 void CGI::executeChildProcess(const char* scriptPath, char* args[], int pipeIn[2], int pipeOut[2]) {
+    int cgi_tmp_fd = open("./tmp.txt", O_CREAT | O_RDWR| O_TRUNC, 0777);
     (void)scriptPath;
     if (client.getRequest().getMethod() == "POST") {
         close(pipeIn[1]);
@@ -385,7 +386,7 @@ void CGI::executeChildProcess(const char* scriptPath, char* args[], int pipeIn[2
     }
 
     close(pipeOut[0]);
-    dup2(pipeOut[1], STDOUT_FILENO);
+    dup2(cgi_tmp_fd, STDOUT_FILENO);
     close(pipeOut[1]);
 
     execve(args[0], args, this->envData);
