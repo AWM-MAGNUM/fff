@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Form</title>
+</head>
+<body>
+    <form method="post" action="http://localhost:9002/cgi-bin/file.php" enctype="multipart/form-data">
+        <input type="text" name="name" placeholder="Name" required />
+        <input type="email" name="email" placeholder="Email" required />
+        <input type="file" id="avatar" name="avatar" accept="image/png, image/jpeg" required />
+        <label for="remember_me">Remember me:</label>
+        <input type="checkbox" name="remember_me" id="remember_me" value="1" />
+        <input type="submit" value="Submit" />
+    </form>
+</body>
+</html>
