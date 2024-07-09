@@ -85,14 +85,13 @@ void	HttpResponse::generateResponse(HttpRequest &req) {
         _client.setResponseBody(_errorPath);
 		return;
 	}
-	if (req.getMethod() == "GET") 
-    {
-        //  std::cout << "######################Entering handleGetMethod" << std::endl;
+	if (req.getMethod() == "GET") {
+        std::cout << "GEET============" << std::endl;
 	 	handleGetMethod();
-        //  std::cout << "##############Exiting handleGetMethod################" << std::endl;
 		return ;
 	}
 	if (req.getMethod() == "POST") {
+        std::cout << "POSSSTT" << std::endl;
         _bodyFileName = req.get_bodyFileName();
         _reqHeader = req.getHeaderFields();
 		handlePostMethod();
@@ -147,6 +146,9 @@ void	HttpResponse::findStatusCode(int code) {
         case 501:
             _statusCode = "501 Not Implemented";
             break;
+        case 504:
+            _statusCode = "504 Gateway Timeout";
+            break;
         case 505:
             _statusCode = "505 HTTP Version Not Supported";
             break;
@@ -184,7 +186,11 @@ std::string HttpResponse::generateDate()
 
 std::string	HttpResponse::createResponseHeader(int errCode, std::string flag) {
 	std::string	respHeader;
-
+      if (!this->cookies.empty())
+      {
+        _headers["Set-Cookie"] += this->cookies + "\r\n";
+      }
+        
 	_headers["Server"] = "Webserv/1.0";
 	if (!_redirection.empty()) {
 		_headers["Location"] = _redirection;
@@ -226,7 +232,6 @@ std::string	HttpResponse::createResponseHeader(int errCode, std::string flag) {
 	}
 	_headers["Date"] = generateDate();
 	std::stringstream ss;
-
 	findStatusCode(errCode);
 	_errCode = errCode;
     if (_errCode == 0)
@@ -242,7 +247,6 @@ std::string	HttpResponse::createResponseHeader(int errCode, std::string flag) {
 }
 
 void	HttpResponse::buildResponse(int errCode) {
-
 	_errCode = errCode;
 	std::string statusCodeStr = toString(_errCode);
     locateErrorPage(_errCode);
@@ -250,7 +254,6 @@ void	HttpResponse::buildResponse(int errCode) {
 
     _client.setResponseHeader(header);
     _client.setResponseBody(_errorPath);
-        // std::cout << "Building response with status code: " << errCode << std::endl;
 }
 
 void	HttpResponse::checkHttpVersion(HttpRequest &req) {
@@ -323,6 +326,8 @@ std::string	HttpResponse::getRequestedResource(HttpRequest &req) {
             _uploadPath = _location.getUpload();
 			if (_location.getRedirect() == true)
 				_redirection = _location.getRedirection();
+            if (_location.getSuppCgi() == true)
+                _interpreter = _location.getInterpreter();
 
             int idx = req.getUri().find(_location.getLocationName());
             std::string locationName = _location.getLocationName();
@@ -332,7 +337,7 @@ std::string	HttpResponse::getRequestedResource(HttpRequest &req) {
             _filePath = _constructPath(relativePath, _root, "");
 
             // std::cout << "fff " << _filePath << "\n";
-            if (isDirectory(_filePath.c_str()) && req.getMethod() == "GET" && _isSupportedMethod("GET")) {
+            if (isDirectory(_filePath.c_str()) && req.getMethod() == "GET" && _isSupportedMethod("GET") && _location.getRedirect() == false) {
                 size_t urisize = _client.getRequest().getUri().size();
                 if ((_root[_root.size() - 1]) != '/' && _client.getRequest().getUri()[urisize - 1] != '/')
                 {
@@ -384,6 +389,5 @@ std::string	HttpResponse::getRequestedResource(HttpRequest &req) {
 		}
 		return _filePath;
     }
-    // std::cout << "3 " <<_filePath << "\n";
     return _filePath;
 }

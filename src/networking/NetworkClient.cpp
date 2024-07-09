@@ -203,8 +203,12 @@ std::string NetworkClient::getResponse() {
 
 void NetworkClient::setResponse(std::string response) {
     this->_response = response;
+    this->_respSize = response.size();
 }
-
+void NetworkClient::set_Response(std::string response, size_t RespSize) {
+    this->_response = response;
+    this->_respSize = RespSize;
+}
 void    NetworkClient::setOpenFile(bool value) {
     this->_openFile = value;
 }
@@ -238,12 +242,4 @@ void NetworkClient::setBytesSent(std::size_t bytes) {
 
 std::size_t NetworkClient::getBytesSent() const {
     return this->bytesSent;
-}
-
-bool    NetworkClient::getRespReady(){
-    return this->_respReady;
-}
-
-void    NetworkClient::setRespReady(bool value) {
-    _respReady = value;
 }

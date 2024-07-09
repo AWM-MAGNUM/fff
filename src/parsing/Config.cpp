@@ -39,7 +39,7 @@ ConfigServer Config::parseServerConfig(std::vector<t_tokens>::iterator& it) {
 	int	loc = 0, aut = 0, ind = 0, err = 0;
 	ConfigServer	server;
     // Parse server configuration settings
-	while (it != this->_tokens.end() && it->_type != "}") {
+	while (it != this->_tokens.end() && it->_type != "}" && it->_value != "}") {
 		if (it->_type == "location") {
 			server.setLocation(this->_tokens ,it);
 			loc++;
@@ -118,7 +118,7 @@ void	Config::parse()
 				it++;
 				continue;
 			}
-			else if (it->_type == "server")
+			else if (it->_type == "server" && it->_value != "}")
 				this->_servers.push_back(parseServerConfig(it));
 			else
 				throw ParseServerException("Error: Unexpected token.");
@@ -148,7 +148,7 @@ void	Config::parse()
 		// for (std::vector<t_tokens>::iterator it =_tokens.begin(); it != this->_tokens.end(); ++it) 
 		// 	std::cout << "type: " << it->_type << ", Value: " << it->_value << std::endl;
 	} catch(const std::exception &e) {
-		std::cout << "config failed " <<e.what() << std::endl;
+		std::cout << e.what() << std::endl;
 		exit(1);
 	}
 }

@@ -1,10 +1,8 @@
 #include "HttpResponse.hpp"
 
-bool	HttpResponse::_isSupportedUploadPath() 
-{
+bool	HttpResponse::_isSupportedUploadPath() {
     // Find upload path logic
-	if (_uploadPath.empty()) 
-    {
+	if (_uploadPath.empty()) {
 		buildResponse(405);
 		return 0;
 	}
@@ -108,103 +106,22 @@ std::string findContentTypePOST(std::string response)
     return contentType;
 }
 
-
-// void HttpResponse::handlePostMethod() {
-//     std::cout << "*********************handlePostMethod called" << std::endl;
-//     if (!_isSupportedMethod("POST")) {
-//         std::cout << "****************Method not supported: POST" << std::endl;
-//         buildResponse(405);
-//         return;
-//     }
-
-//     if (_isSupportedUploadPath() && _filePath.find(".py") == std::string::npos && _filePath.find(".php") == std::string::npos) {
-//         std::ifstream bodyfile(_bodyFileName.c_str());
-//         std::ostringstream filecontent;
-//         filecontent << bodyfile.rdbuf();
-//         _postBody += filecontent.str();
-//         bodyfile.close();
-//         processPostMethod();
-//         return;
-//     } else {
-//         int type = _checkRequestedType();
-//         if (type == FILE_TYPE) {
-//             _postRequestFile();
-//             return;
-//         } else if (type == FOLDER_TYPE) {
-//             _postRequestFolder();
-//             return;
-//         } else if (type == ERROR) {
-//             buildResponse(404);
-//             return;
-//         }
-//     }
-
-//     if (_filePath.find(".py") != std::string::npos || _filePath.find(".php") != std::string::npos) {
-//         std::ifstream bodyfile(_bodyFileName.c_str());
-//         std::ostringstream filecontent;
-//         filecontent << bodyfile.rdbuf();
-//         _postBody += filecontent.str();
-//         bodyfile.close();
-
-//         CGI cgi(_client);
-//         cgi.configureEnvironment(_filePath);
-//         cgi.executeScript();
-
-//         if (cgi.responseStatus != 200) {
-//             std::cout << "ERROCODE CGI " << cgi.responseStatus << std::endl;
-//             buildResponse(cgi.responseStatus);
-//             return;
-//         }
-        
-//         std::string cgi_headers = extractHeadersPOST(_client.getResponse());
-//         size_t pos = cgi_headers.find("Set-Cookie");
-//         if (pos != std::string::npos) {
-//             cgi_headers = cgi_headers.substr(pos);
-//             pos = cgi_headers.find("\r\n");
-//             this->cookies = cgi_headers.substr(0, pos); 
-//         }
-
-//         std::string response_cgi = _client.getResponse();
-//         std::string c_t = findContentTypePOST(response_cgi);
-//         _client.setResponseBody(extractBodyPOST(_client.getResponse()));
-
-//         std::stringstream ss;
-//         ss << _client.getResponseBody().length();
-//         std::string body_length = ss.str();
-//         _client.setResponseHeader(createResponseHeader(200, c_t));
-//         _isText = true;
-//     }
-// }
-
-void HttpResponse::handlePostMethod() 
-{
-    // std::cout << "*********************handlePostMethod called" << std::endl;
-    if (!_isSupportedMethod("POST")) 
-    {
-        // std::cout << "Method not supported: POST" << std::endl;
+void HttpResponse::handlePostMethod() {
+    if (!_isSupportedMethod("POST")) {
         buildResponse(405);
         return;
     }
 
-    // std::cout << "POST method is supported" << std::endl;
-
     if (_isSupportedUploadPath() && _filePath.find(".py") == std::string::npos && _filePath.find(".php") == std::string::npos) {
-        // std::cout << "Handling standard file upload for POST" << std::endl;
         std::ifstream bodyfile(_bodyFileName.c_str());
-        if (bodyfile.is_open()) {
-            std::ostringstream filecontent;
-            filecontent << bodyfile.rdbuf();
-            _postBody += filecontent.str();
-            bodyfile.close();
-        } else {
-            // std::cout << "Error opening body file: " << _bodyFileName << std::endl;
-        }
+        std::ostringstream filecontent;
+        filecontent << bodyfile.rdbuf();
+        _postBody += filecontent.str();
+        bodyfile.close();
         processPostMethod();
         return;
     } else {
-        // std::cout << "Handling POST for file: " << _filePath << std::endl;
         int type = _checkRequestedType();
-        // std::cout << "File type detected: " << type << std::endl;
         if (type == FILE_TYPE) {
             _postRequestFile();
             return;
@@ -217,74 +134,25 @@ void HttpResponse::handlePostMethod()
         }
     }
 
-    // std::cout << "Processing CGI for POST" << std::endl;
-
-    // if (_filePath.find(".py") != std::string::npos || _filePath.find(".php") != std::string::npos) {
-    //     std::ifstream bodyfile(_bodyFileName.c_str());
-    //     if (bodyfile.is_open()) {
-    //         std::ostringstream filecontent;
-    //         filecontent << bodyfile.rdbuf();
-    //         _postBody += filecontent.str();
-    //         bodyfile.close();
-    //     } else {
-    //         // std::cout << "Error opening body file for CGI: " << _bodyFileName << std::endl;
-    //     }
-
-    //     CGI cgi(_client);
-    //     cgi.configureEnvironment(_filePath);
-    //     cgi.executeScript();
-
-    //     if (cgi.responseStatus != 200) {
-    //         // std::cout << "ERROCODE CGI " << cgi.responseStatus << std::endl;
-    //         buildResponse(cgi.responseStatus);
-    //         return;
-    //     }
-        
-    //     std::string cgi_headers = extractHeadersPOST(_client.getResponse());
-    //     size_t pos = cgi_headers.find("Set-Cookie");
-    //     if (pos != std::string::npos) {
-    //         cgi_headers = cgi_headers.substr(pos);
-    //         pos = cgi_headers.find("\r\n");
-    //         this->cookies = cgi_headers.substr(0, pos); 
-    //     }
-
-    //     std::string response_cgi = _client.getResponse();
-    //     std::string c_t = findContentTypePOST(response_cgi);
-    //     _client.setResponseBody(extractBodyPOST(_client.getResponse()));
-
-    //     std::stringstream ss;
-    //     ss << _client.getResponseBody().length();
-    //     std::string body_length = ss.str();
-    //     _client.setResponseHeader(createResponseHeader(200, c_t));
-    //     _isText = true;
-    // } 
-    // else 
-    // {
-    //     std::cout << "Building response with status code: 405 (Method not allowed)" << std::endl;
-    //     buildResponse(405);
-    // }
 }
 
-void	HttpResponse::_postRequestFile() 
-{
-     if (_filePath.find(".py") != std::string::npos || _filePath.find(".php") != std::string::npos) {
+void	HttpResponse::_postRequestFile() {
+    
+    if (_filePath.find(".py") != std::string::npos || _filePath.find(".php") != std::string::npos) {
         std::ifstream bodyfile(_bodyFileName.c_str());
-        if (bodyfile.is_open()) {
-            std::ostringstream filecontent;
-            filecontent << bodyfile.rdbuf();
-            _postBody += filecontent.str();
-            bodyfile.close();
-        } else {
-            // std::cout << "Error opening body file for CGI: " << _bodyFileName << std::endl;
-        }
+        std::ostringstream filecontent;
+        filecontent << bodyfile.rdbuf();
+        _postBody += filecontent.str();
+        bodyfile.close();
 
-        CGI cgi(_client);
-        cgi.configureEnvironment(_filePath);
-        cgi.executeScript();
+        CGI cgi(_client, _filePath);
+        std::string script_name = Get_File_Name_From_URI();
+        cgi.set_environmentVariables(script_name);
+        cgi.RUN();
 
-        if (cgi.responseStatus != 200) {
-            // std::cout << "ERROCODE CGI " << cgi.responseStatus << std::endl;
-            buildResponse(cgi.responseStatus);
+        if (cgi.status_code != 200) {
+            // std::cout << "ERROCODE CGI " << cgi.status_code << std::endl;
+            buildResponse(cgi.status_code);
             return;
         }
         
@@ -299,19 +167,15 @@ void	HttpResponse::_postRequestFile()
         std::string response_cgi = _client.getResponse();
         std::string c_t = findContentTypePOST(response_cgi);
         _client.setResponseBody(extractBodyPOST(_client.getResponse()));
-
+        std::cout << " ******CGI RESPONSE POST:  " << extractBodyPOST(_client.getResponse()) << "******"<<std::endl;
         std::stringstream ss;
         ss << _client.getResponseBody().length();
         std::string body_length = ss.str();
         _client.setResponseHeader(createResponseHeader(200, c_t));
-        _isText = true;
-    } 
-    else 
-    {
-        std::cout << "Building response with status code: 405 (Method not allowed)" << std::endl;
-        buildResponse(403);
     }
-    
+    else {
+		buildResponse(403);
+	}
 }
 
 void	HttpResponse::isUrihasSlashInTHeEnd() {
@@ -328,14 +192,6 @@ void	HttpResponse::isUrihasSlashInTHeEnd() {
 		_slashSetted = true;
 		return ;
 	}
-
-	// if (_filePath[_filePath.size() - 1] != '/')
-    // {
-	// 	std::cout << "kidkhol l hadi?\n";
-    //    _filePath += "/";
-    //     buildResponse(301);
-	// 	_slashSetted = true;
-    // }
 }
 
 void	HttpResponse::_postRequestFolder() {
@@ -363,7 +219,7 @@ bool HttpResponse::isPostDirHasIndexFiles() {
                  _errCode = 200;
                 _filePath = path;
                 file.close();
-				//  _isFile();
+				_postRequestFile();
                 return true;
             }
 			else {

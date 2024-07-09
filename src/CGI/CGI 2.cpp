@@ -7,19 +7,21 @@
 #include <csignal>
 #include <iostream>
 
-CGI::CGI(NetworkClient &client) :  envData(nullptr) ,client(client), responseStatus(200) {
+CGI::CGI(NetworkClient &client, std::string &filePath) : envData(NULL) ,client(client), _filePath(filePath), responseStatus(200) {
 }
 
 CGI::~CGI() {
     if (envData) {
-        for (size_t i = 0; envData[i] != nullptr; ++i) {
+        for (size_t i = 0; envData[i] != NULL; ++i) {
             delete[] envData[i];
         }
         delete[] envData;
     }
 }
 
-CGI::CGI(const CGI& otherCGI) : client(otherCGI.client), responseStatus(otherCGI.responseStatus) {
+CGI::CGI(const CGI& otherCGI) : client(otherCGI.client),
+    _filePath(otherCGI._filePath), responseStatus(otherCGI.responseStatus)
+{
     if (otherCGI.envData) {
         size_t count = 0;
         while (otherCGI.envData[count]) ++count;
@@ -28,16 +30,16 @@ CGI::CGI(const CGI& otherCGI) : client(otherCGI.client), responseStatus(otherCGI
             envData[i] = new char[strlen(otherCGI.envData[i]) + 1];
             strcpy(envData[i], otherCGI.envData[i]);
         }
-        envData[count] = nullptr;
+        envData[count] = NULL;
     } else {
-        envData = nullptr;
+        envData = NULL;
     }
 }
 
 CGI& CGI::operator=(const CGI& otherCGI) 
 {
     if (this != &otherCGI) {
-        for (size_t i = 0; envData && envData[i] != nullptr; ++i) {
+        for (size_t i = 0; envData && envData[i] != NULL; ++i) {
             delete[] envData[i];
         }
         delete[] envData;
@@ -52,9 +54,9 @@ CGI& CGI::operator=(const CGI& otherCGI)
                 envData[i] = new char[strlen(otherCGI.envData[i]) + 1];
                 strcpy(envData[i], otherCGI.envData[i]);
             }
-            envData[count] = nullptr;
+            envData[count] = NULL;
         } else {
-            envData = nullptr;
+            envData = NULL;
         }
     }
     return *this;
@@ -68,7 +70,20 @@ void CGI::initializeEnvData(const std::vector<std::string>& envs)
         this->envData[i] = new char[envs[i].size() + 1];
         std::strcpy(this->envData[i], envs[i].c_str());
     }
-    this->envData[i] = nullptr;
+    this->envData[i] = NULL;
+}
+
+std::string	CGI::getContentLength(std::string path) {
+	struct stat fileStat;
+    if (stat(path.c_str(), &fileStat) == 0) 
+    {
+		// _fileSize = fileStat.st_size;
+		// std::cout << "file exist of size: " << _fileSize << "\n";
+        std::ostringstream oss;
+        oss << fileStat.st_size;
+        return oss.str();
+    }
+    return "0";
 }
 
 void CGI::configureEnvironment(const std::string& file_name) {
@@ -76,22 +91,24 @@ void CGI::configureEnvironment(const std::string& file_name) {
     std::map<std::string, std::string> &headers = this->client.getRequest().getHeaderFields();
     HttpRequest &request = this->client.getRequest();
 
+   // std::cout << "filePath: " << _filePath << "\n"; 
+    //std::cout << "FILE NAME " << file_name << std::endl;
+
     envs.push_back("CONTENT_TYPE=" + headers["Content-Type"]);
     envs.push_back("REDIRECT_STATUS=200");
     envs.push_back("CONTENT_LENGTH=" + headers["Content-Length"]);
     envs.push_back("HTTP_COOKIE=" + headers["Cookie"]);
     envs.push_back("HTTP_USER_AGENT=" + headers["User-Agent"]);
-    envs.push_back("PATH_INFO=");
+    envs.push_back("PATH_INFO=" + _filePath);
     envs.push_back("QUERY_STRING=" + request.get_queryString());
     envs.push_back("REMOTE_ADDR=");
     envs.push_back("REMOTE_HOST=");
     envs.push_back("REQUEST_METHOD=" + request.getMethod());
-    std::cout << "FILE NAME " << file_name << std::endl;
     envs.push_back("SCRIPT_NAME=" + file_name);
     envs.push_back("SERVER_NAME=" + headers["Host"]);
     envs.push_back("SERVER_SOFTWARE=HTTP/1.1");
-    envs.push_back("SCRIPT_FILENAME=" + std::string("/Users/user/Desktop/roro/src/cgi-bin/") + file_name);
-    envs.push_back("REQUEST_URI=" + std::string("/Users/user/Desktop/roro/src/cgi-bin/") + file_name);
+    envs.push_back("SCRIPT_FILENAME=" + _filePath);
+    envs.push_back("REQUEST_URI=" + _filePath);
 
     this->envData = new char*[envs.size() + 1];
     for (size_t i = 0; i < envs.size(); i++) {
@@ -131,16 +148,16 @@ void CGI::executeChildProcess(const char* scriptPath, char* args[], int pipeIn[2
     close(pipeOut[0]);
     dup2(pipeOut[1], STDOUT_FILENO);
     close(pipeOut[1]);
-    std::cout << "Executing script: " << scriptPath << std::endl; 
+    // std::cout << "Executing script: " << scriptPath << std::endl; 
     (void) scriptPath;
-        std::cout << "Checking script path: " << args[0] << std::endl;
+        // std::cout << "Checking script path: " << args[0] << std::endl;
 // const char *arr[] = {"/Users/user/Desktop/roro/src/cgi-bin/test.php", NULL};
 
 
 
     execve(args[0], args, this->envData);
 
-    std::string errorMessage = "Content-Type: text/html\r\n\r\n<html><body style='text-align:center;'><h1>500 Internal Error</h1></body></html>";
+    std::string errorMessage = "Content-Type: text/html\r\n\r\n<html><body style='text-align:center;'><h1>500 Internal Server Error</h1></body></html>";
     write(STDOUT_FILENO, errorMessage.c_str(), errorMessage.size());
     std::exit(EXIT_FAILURE);
 }
@@ -182,7 +199,7 @@ void CGI::handleParentProcess(pid_t processId, int pipeIn[2], int pipeOut[2], co
         delete[] envData[i];
     }
     delete[] envData;
-    envData = nullptr;
+    envData = NULL;
 
     char buffer[1024];
     ssize_t bytesRead;
@@ -192,7 +209,7 @@ void CGI::handleParentProcess(pid_t processId, int pipeIn[2], int pipeOut[2], co
         buffer[bytesRead] = '\0';
         response += buffer;
     }
-     std::cout << "CGI Response: " << response << std::endl;
+    //  std::cout << "CGI Response: " << response << std::endl;
 
     client.setResponse(response.c_str());
 
@@ -207,7 +224,7 @@ void CGI::handleParentProcess(pid_t processId, int pipeIn[2], int pipeOut[2], co
 //     char* scriptArgument = new char[scriptPath.size() + 1];
 //     std::strcpy(scriptArgument, scriptPath.c_str());
 
-//     char *arguments[] = {scriptArgument, nullptr};
+//     char *arguments[] = {scriptArgument, NULL};
 
 //     if (!initializePipes(pipeIn, pipeOut)) {
 //         delete[] scriptArgument;
@@ -234,11 +251,12 @@ void CGI::executeScript() {
     pid_t processId;
     int pipeIn[2] = {-1, -1}, pipeOut[2] = {-1, -1};
 
+    // std::cout << client.getRequest().getUri() << "\n";
     std::string scriptPath = "./src" + client.getRequest().getUri();
     char* scriptArgument = new char[scriptPath.size() + 1];
     std::strcpy(scriptArgument, scriptPath.c_str());
 
-    char *arguments[] = {scriptArgument, nullptr};
+    char *arguments[] = {scriptArgument, NULL};
 
     if (!initializePipes(pipeIn, pipeOut)) {
         delete[] scriptArgument;
@@ -247,7 +265,7 @@ void CGI::executeScript() {
 
     processId = fork();
     if (processId == -1) {
-        std::string errorMessage = "Content-Type: text/html\r\n\r\n<html><body style='text-align:center;'><h1>500 Internal Error</h1></body></html>";
+        std::string errorMessage = "Content-Type: text/html\r\n\r\n<html><body style='text-align:center;'><h1>500 Internal Server Error</h1></body></html>";
         write(STDOUT_FILENO, errorMessage.c_str(), errorMessage.size());
         delete[] scriptArgument;
         std::exit(EXIT_FAILURE);

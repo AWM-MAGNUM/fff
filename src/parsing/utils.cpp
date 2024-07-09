@@ -174,14 +174,8 @@ ConfigLocation	ConfigServer::parseLocation(std::vector<t_tokens> &tok, std::vect
 			loc.setRedirection(it->_value);
 			red++;
 		}
-		else if (it->_type == "fastcgi_pass") {
-			loc.setFastCgiPass(it->_value);
-		}
-		else if (it->_type == "include") {
-			loc.setInclude(it->_value);
-		}
-		else if (it->_type == "fastcgi_param") {
-			loc.setFastCgiParam(it->_value);
+		else if (it->_type == "interpreter") {
+			loc.setInterpreter(it->_value);
 		}
 		else if (it->_type.empty()){
 			it++;
@@ -210,5 +204,7 @@ ConfigLocation	ConfigServer::parseLocation(std::vector<t_tokens> &tok, std::vect
 
 	if (it->_type != "}")
 		throw ConfigServerException("Error: expected '}' in the end of location directive.");
+	if (it->_value == "}")
+		throw ConfigServerException("Error: Unexpected token");
 	return (loc);
 }

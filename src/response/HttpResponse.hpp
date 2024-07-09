@@ -76,10 +76,10 @@ class HttpResponse {
 		std::map<std::string, std::string> _reqHeader;
 		bool	_isText;
 		bool	_slashSetted;
+		std::map<std::string, std::string>	_interpreter;
 
 		void	_handleDefaultErrors();
-		// bool	_isSupportedMethod(std::string meth);
-		bool _isSupportedMethod(const std::string& method);
+		bool	_isSupportedMethod(std::string meth);
 		bool	_isSupportedUploadPath();
 		std::string	_constructPath(const std::string& requestPath, const std::string &root, const std::string &index);
 		int		_checkRequestedType();

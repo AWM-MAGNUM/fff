@@ -202,14 +202,15 @@ std::string extractHeaders(std::string httpResponse)
 
 std::string HttpResponse::Get_File_Name_From_URI()
 {
-    size_t lastSlashPos = _client.getRequest().getUri().find_last_of('/');
+    size_t lastSlashPos = _filePath.find_last_of('/');
 
     if (lastSlashPos != std::string::npos)
     {
-        return _client.getRequest().getUri().substr(lastSlashPos + 1);
+		
+        return _filePath.substr(lastSlashPos + 1);
     }
 
-    const char *cstr = _client.getRequest().getUri().c_str();
+    const char *cstr = _filePath.c_str();
     const char *fileName = std::strrchr(cstr, '/');
 
     if (fileName)
@@ -217,7 +218,7 @@ std::string HttpResponse::Get_File_Name_From_URI()
         return fileName + 1;
     }
 
-    return _client.getRequest().getUri();
+    return _filePath;
 }
 
 std::string findContentType(std::string response)
@@ -258,49 +259,44 @@ std::string findContentType(std::string response)
     return contentType;
 }
 
-void	HttpResponse::_isFile() 
+void 	HttpResponse::_isFile() 
 {
     // Handle file
 	std::string script_name = Get_File_Name_From_URI();
 	std::string filePath = _client.getRequest().getUri();
-    // std::cout << "URI**********1:"<<filePath<< std::endl;
-	// std::cout << script_name << "NAAAAAAMEEE" << std::endl;
     std::ifstream file(_filePath.c_str(), std::ios::in | std::ios::binary);
 	if (file) 
 	{
 		std::string extension = _filePath.substr(_filePath.find_last_of('.'));
-		//std::cout << extension << "FILE EXT" << std::endl;
 
-			if (extension == ".php" || extension == ".py")
-			{
-			//	std::cout<< "CGI FOUND !" << std::endl;
-				size_t pos;
-				CGI cgi(_client);
-					cgi.configureEnvironment(script_name);
-					cgi.executeScript();
-					if (cgi.responseStatus != 200)
-					{  
-						// std::cout << "ERROCODE CGI " << cgi.responseStatus << std::endl;
-						buildResponse(cgi.responseStatus);
-						return;
-					}
-				std::string cgi_headers = extractHeaders(_client.getResponse());
-				pos = cgi_headers.find("Set-Cookie");
+		if (extension == ".php" || extension == ".py")
+		{
+			size_t pos;
+			CGI cgi(_client, _filePath);
+			cgi.set_environmentVariables(script_name);
+			cgi.RUN();
+			if (cgi.status_code != 200)
+			{  
+				// std::cout << "ERROCODE CGI " << cgi.status_code << std::endl;
+				buildResponse(cgi.status_code);
+				return;
+			}
+			std::string cgi_headers = extractHeaders(_client.getResponse());
+			//std::cout << "Headers CGI: " << cgi_headers << "\n";
+			pos = cgi_headers.find("Set-Cookie");
 				if (pos != std::string::npos)
 				{
 					cgi_headers = cgi_headers.substr(pos);
 					pos = cgi_headers.find("\r\n");
-					this->cookies = cgi_headers.substr(0, pos); 
+					this->cookies = cgi_headers.substr(0, pos);
+					//std::cout << "COOOKIEEES:"<<this->cookies << std::endl;
 				}
-				std::string response_cgi = _client.getResponse();
-								//std::cout << _client.getResponse() << std::endl;
-
+				 std::string response_cgi = _client.getResponse();
+				
 				std::string c_t = findContentType(response_cgi);
+				std::cout << " ******CGI RESPONSE:  " << extractBody(_client.getResponse()) << "******"<<std::endl;
 				_client.setResponseBody(extractBody(_client.getResponse()));
-				// std::cout << _client.getResponseBody() << std::endl;
-				std::stringstream ss;
-				ss << _client.getResponseBody().length();
-				std::string body_length = ss.str();
+				// std::cout << _client.getBODY() << std::endl;
 				_client.setResponseHeader(createResponseHeader(200, c_t));
 				_isText = true;
 				return;
@@ -344,79 +340,33 @@ void	HttpResponse::_isFolder() {
 	}
 }
 
-// void	HttpResponse::handleGetMethod() {
-// 	if (!_isSupportedMethod("GET")) {
-// 		buildResponse(405);
-// 		return ;
-// 	}
-// 	int type = _checkRequestedType();
-// 	if (type == FILE_TYPE) {
-// 		_isFile();
-// 		return;
-// 	}
-// 	else if (type == FOLDER_TYPE) {
-// 		_isFolder();
-// 		return ;
-// 	}
-// 	else if (type == ERROR){
-// 		buildResponse(404);
-// 		return ;
-// 	}
-// }
-
-void HttpResponse::handleGetMethod() 
-{
-    // std::cout << "*********************handleGetMethod called" << std::endl;
-    if (!_isSupportedMethod("GET")) 
-	{
-        // std::cout << "Method not supported: GET" << std::endl;
-        buildResponse(405);
-        return;
-    }
-
-    // std::cout << "GET method is supported" << std::endl;
-    int type = _checkRequestedType();
-    if (type == FILE_TYPE) 
-	{
-        _isFile();
-        return;
-    } 
-	else if (type == FOLDER_TYPE) 
-	{
-        _isFolder();
-        return;
-    } 
-	else if (type == ERROR) 
-	{
-        buildResponse(404);
-        return;
-    }
+void	HttpResponse::handleGetMethod() {
+	if (!_isSupportedMethod("GET")) {
+		buildResponse(405);
+		return ;
+	}
+	int type = _checkRequestedType();
+	if (type == FILE_TYPE) {
+		_isFile();
+		return;
+	}
+	else if (type == FOLDER_TYPE) {
+		_isFolder();
+		return ;
+	}
+	else if (type == ERROR){
+		buildResponse(404);
+		return ;
+	}
 }
 
-// bool	HttpResponse::_isSupportedMethod(std::string meth) {
+bool	HttpResponse::_isSupportedMethod(std::string meth) {
 	
-// 	std::vector<std::string>::iterator	it = _methods.begin();
+	std::vector<std::string>::iterator	it = _methods.begin();
 
-// 	for (; it != _methods.end(); ++it) {
-// 		if (*it == meth)
-// 			return true;
-// 	}
-//     return false;
-// }
-
-
-bool HttpResponse::_isSupportedMethod(const std::string& method) 
-{
-    // std::cout << "Checking if method " << method << " is supported" << std::endl;
-    for (size_t i = 0; i < _methods.size(); ++i) 
-	{
-        // std::cout << "Supported method: " << _methods[i] << std::endl;
-        if (_methods[i] == method) 
-		{
-            // std::cout << "Method " << method << " is supported" << std::endl;
-            return true;
-        }
-    }
-    // std::cout << "Method " << method << " is not supported" << std::endl;
+	for (; it != _methods.end(); ++it) {
+		if (*it == meth)
+			return true;
+	}
     return false;
 }

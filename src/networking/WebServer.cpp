@@ -17,7 +17,7 @@ NetworkClient& WebServer::GetRightClient(int fd)
     if (it != this->clients.end())
     {
         // std::cout << "6" << std::endl;
-     			// std::cout << "((()))" <<it->second.getRequest().getUri() << std::endl;
+     	// 		std::cout << "((()))" <<it->second.getRequest().getUri() << std::endl;
         return it->second;
     }
         
@@ -77,7 +77,6 @@ void WebServer::setupServerSockets()
             std::cerr << "Error opening socket for server " << (*serverConfigs)[i].getServerName() << ": " << strerror(errno) << std::endl;
             continue;
         }
-                //  OUMAIMA CHARKI <3  BADR EDDINE 
         int optval = 1;
         if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) < 0) 
         {
@@ -148,8 +147,7 @@ void WebServer::CheckRequestStatus(NetworkClient &client)
     }
 }
 
-void WebServer::processClientRequests(int fd) 
-{
+void WebServer::processClientRequests(int fd) {
     NetworkClient &client = GetRightClient(fd);
     char *buffer = client._buffer;
     size_t client_buffer_size = sizeof(client._buffer);
@@ -165,13 +163,31 @@ void WebServer::processClientRequests(int fd)
             return;
         }
     }
-    client.saveRequestData(bytes_received);
-    // **************std::cout<< client.getRequest().getRequestData() << std::endl;
+	client.saveRequestData(bytes_received);
+	std::cout<< ">>>>>> REQUEST " <<client.getRequest().getRequestData() << std::endl;
     CheckRequestStatus(client);
     if (client.getRequest().get_requestStatus() == HttpRequest::REQUEST_READY) {
+        // std::cout << "size of body " << client.getRequest().getBodysize();
+    //     std::string hostHeader = client.getRequest().getHeader("Host");
+    //     hostHeader = trimm(hostHeader);
+
+    //     size_t portPos = hostHeader.find(":");
+    //     int port = 80; // Default to 80 if no port is specified
+    //     if (portPos != std::string::npos) {
+    //         port = std::atoi(hostHeader.substr(portPos + 1).c_str());
+    //         hostHeader = hostHeader.substr(0, portPos);
+    //     } else {
+    //         port = client.getServer().getPort();
+    //     }
+
+    //     const ConfigServer &clientServer = matchServerByName(client.getRequest().getHeader("Host"), port);
+    //    // std::cout << "Port in processClientRequests: " << clientServer.getPort() << std::endl; // Debugging output
+    //     client.setServer(clientServer);
         FD_SET(fd, &this->writeSet);
+
     }
 }
+
 
 void WebServer::run() {
     fd_set readcpy;
@@ -180,10 +196,10 @@ void WebServer::run() {
         readcpy = this->readSet;
         writecpy = this->writeSet;
         signal(SIGPIPE, SIG_IGN);
-        if (select(this->highestFd + 1, &readcpy, &writecpy, NULL, NULL) < 0) 
+        if (select(this->highestFd + 1, &readcpy, &writecpy, NULL, NULL) < 0) {
             std::cerr << "Error in select()." << std::endl;
-        for (int i = 3; i <= this->highestFd; i++) { 
-            // try {
+        }
+        for (int i = 3; i <= this->highestFd; i++) {
                 if (FD_ISSET(i, &writecpy)) {
                     NetworkClient &client = GetRightClient(i);
                     sendDataToClient(client);
@@ -195,12 +211,6 @@ void WebServer::run() {
                         processClientRequests(i);
                     }
                 }
-            // } catch (const RequestError &error)
-		    // {
-			//     FD_CLR(i, &this->readSet);
-			//     FD_SET(i, &this->writeSet);
-			//     close(i);
-		    // }
         }   
     }
 }
@@ -248,7 +258,7 @@ void WebServer::closeClient(int clientSocket)
         FD_CLR(it->first, &readSet);
         FD_CLR(it->first, &writeSet);
         clients.erase(it);
-        // std::cout << "Client with socket " << clientSocket << " has been closed and removed." << std::endl;
+        std::cout << "Client with socket " << clientSocket << " has been closed and removed." << std::endl;
     } 
     else
         std::cerr << "Attempt to close non-existent client socket." << std::endl;
