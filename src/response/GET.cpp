@@ -294,7 +294,7 @@ void 	HttpResponse::_isFile()
 				 std::string response_cgi = _client.getResponse();
 				
 				std::string c_t = findContentType(response_cgi);
-				std::cout << " ******CGI RESPONSE:  " << extractBody(_client.getResponse()) << "******"<<std::endl;
+				//std::cout << " ******CGI RESPONSE:  " << extractBody(_client.getResponse()) << "******"<<std::endl;
 				_client.setResponseBody(extractBody(_client.getResponse()));
 				// std::cout << _client.getBODY() << std::endl;
 				_client.setResponseHeader(createResponseHeader(200, c_t));

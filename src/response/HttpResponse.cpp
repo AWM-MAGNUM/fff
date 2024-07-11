@@ -90,14 +90,14 @@ void	HttpResponse::generateResponse(HttpRequest &req) {
 	 	handleGetMethod();
 		return ;
 	}
-	if (req.getMethod() == "POST") {
+	else if (req.getMethod() == "POST") {
         std::cout << "POSSSTT" << std::endl;
         _bodyFileName = req.get_bodyFileName();
         _reqHeader = req.getHeaderFields();
 		handlePostMethod();
 		return ;
 	}
-	if (req.getMethod() == "DELETE") {
+	else if (req.getMethod() == "DELETE") {
 		handleDeleteMethod(); //where u put the Delete method
 		return ;
 	}

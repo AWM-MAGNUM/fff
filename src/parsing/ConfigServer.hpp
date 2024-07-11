@@ -17,7 +17,7 @@ class	ConfigServer {
 		~ConfigServer();
 		ConfigServer(ConfigServer const &src);
 		ConfigServer&	operator=(const ConfigServer &src);
-
+		typedef std::vector<ConfigServer>::iterator v_iterator;
 		ConfigLocation	parseLocation(std::vector<t_tokens> &tok, std::vector<t_tokens>::iterator& it);
 		
 		//Getters

@@ -108,7 +108,7 @@ void CGI::RUN()
         // {
         //     std::cout << args[1] << "ARGR 1"<<  std::endl;
         // }
-		if (dup2(fdIn, 0) == -1 || dup2(fdOut,1) == -1)
+		if (dup2(fdIn, 0) == -1 || dup2(fdOut, 1) == -1)
 		{
 			std::string errorContent = "Content-Type: text/html\r\n\r\n<html><body style='text-align:center;'><h1>500 Internal Errrrrrror</h1></body></html>";
        		write(STDOUT_FILENO, errorContent.c_str(), errorContent.size());
@@ -168,6 +168,7 @@ void CGI::RUN()
 		char *tmp_str = new char[response.size() + 1];
 		strcpy(tmp_str, response.c_str());
 		this->client.set_Response(tmp_str, response.size());
+		std::cout << tmp_str << response.size() << std::endl;
 		delete[] tmp_str;
 		if (this->client.getRequest().getMethod() == "POST")
 			close(fdIn);

@@ -48,7 +48,9 @@ private:
     const ConfigServer& matchServerByFd(int fd);
     const ConfigServer& matchServerByName(const std::string& host, int port);
     void readFromClient(int clientSocket, std::string &requestString);
-    void    sendResponse(HttpRequest &req, NetworkClient &client);
+    void sendResponse(HttpRequest &req ,NetworkClient &client);
+    void addSocketFd(int fd);
+    void CloseConnection(int fd);
     int sendResponseBody(NetworkClient &client);
 
 
