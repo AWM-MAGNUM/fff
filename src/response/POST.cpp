@@ -139,11 +139,11 @@ void HttpResponse::handlePostMethod() {
 void	HttpResponse::_postRequestFile() {
     
     if (_filePath.find(".py") != std::string::npos || _filePath.find(".php") != std::string::npos) {
-        std::ifstream bodyfile(_bodyFileName.c_str());
-        std::ostringstream filecontent;
-        filecontent << bodyfile.rdbuf();
-        _postBody += filecontent.str();
-        bodyfile.close();
+        // std::ifstream bodyfile(_bodyFileName.c_str());
+        // std::ostringstream filecontent;
+        // filecontent << bodyfile.rdbuf();
+        // _postBody += filecontent.str();
+        // bodyfile.close();
 
         CGI cgi(_client, _filePath);
         std::string script_name = Get_File_Name_From_URI();
@@ -165,13 +165,14 @@ void	HttpResponse::_postRequestFile() {
         }
 
         std::string response_cgi = _client.getResponse();
-        std::string c_t = findContentTypePOST(response_cgi);
+        _contentType = findContentTypePOST(response_cgi);
         _client.setResponseBody(extractBodyPOST(_client.getResponse()));
-       // std::cout << " ******CGI RESPONSE POST:  " << extractBodyPOST(_client.getResponse()) << "******"<<std::endl;
         std::stringstream ss;
+        // ss << "HTTP/1.1 200 OK\r\n\r\n";
         ss << _client.getResponseBody().length();
         std::string body_length = ss.str();
-        _client.setResponseHeader(createResponseHeader(200, c_t));
+        _client.setResponseHeader(createResponseHeader(200, "Nothing"));
+    //    std::cout << " ******CGI RESPONSE POST:  " <<  << "******"<<std::endl;
     }
     else {
 		buildResponse(403);

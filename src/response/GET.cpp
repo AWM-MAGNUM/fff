@@ -174,6 +174,8 @@ void	HttpResponse::_getAutoIndex() {
 			buildResponse(_errCode);
 			return;
 		}
+		// std::cout << _filePath << "\n";
+		_contentType = getContentType(_filePath);
 		_client.setResponseHeader(createResponseHeader(200, "Nothing"));
 	}
 	else
@@ -293,11 +295,11 @@ void 	HttpResponse::_isFile()
 				}
 				 std::string response_cgi = _client.getResponse();
 				
-				std::string c_t = findContentType(response_cgi);
+				_contentType = findContentType(response_cgi);
 				//std::cout << " ******CGI RESPONSE:  " << extractBody(_client.getResponse()) << "******"<<std::endl;
 				_client.setResponseBody(extractBody(_client.getResponse()));
 				// std::cout << _client.getBODY() << std::endl;
-				_client.setResponseHeader(createResponseHeader(200, c_t));
+				_client.setResponseHeader(createResponseHeader(200, "Nothing"));
 				_isText = true;
 				return;
 			}

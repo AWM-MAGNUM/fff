@@ -86,12 +86,12 @@ void	HttpResponse::generateResponse(HttpRequest &req) {
 		return;
 	}
 	if (req.getMethod() == "GET") {
-        std::cout << "GEET============" << std::endl;
+        // std::cout << "GEET============" << std::endl;
 	 	handleGetMethod();
 		return ;
 	}
 	else if (req.getMethod() == "POST") {
-        std::cout << "POSSSTT" << std::endl;
+        // std::cout << "POSSSTT" << std::endl;
         _bodyFileName = req.get_bodyFileName();
         _reqHeader = req.getHeaderFields();
 		handlePostMethod();
@@ -188,7 +188,7 @@ std::string	HttpResponse::createResponseHeader(int errCode, std::string flag) {
 	std::string	respHeader;
       if (!this->cookies.empty())
       {
-        _headers["Set-Cookie"] += this->cookies + "\r\n";
+        _headers["Set-Cookie"] += this->cookies;
       }
         
 	_headers["Server"] = "Webserv/1.0";
@@ -223,11 +223,12 @@ std::string	HttpResponse::createResponseHeader(int errCode, std::string flag) {
 	}
     else {
 		_headers["Content-Length"] = getContentLength(_filePath);
-        if (_headers.find("Content-Type") == _headers.end())
-        {
-            _headers["Content-Type"] = getContentType(_filePath);
-        }
-		else
+        // if (_headers.find("Content-Type") == _headers.end())
+        // {
+        //     std::cout << "hereee\n";
+        //     _headers["Content-Type"] = getContentType(_filePath);
+        // }
+		// else
             _headers["Content-Type"] = _contentType;
 	}
 	_headers["Date"] = generateDate();

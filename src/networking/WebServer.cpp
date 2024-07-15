@@ -69,13 +69,13 @@ void setSocketNonBlocking(int socket_fd)
 
 void WebServer::addSocketFd(int fd)
 {
-	std::cout << "PUSHBACKTIMES" << std::endl;
+	// std::cout << "PUSHBACKTIMES" << std::endl;
 	this->serverSockets.push_back(fd);
 	FD_SET(fd, &(this->readSet));
 }
 void WebServer::setupServerSockets() 
 {
-    std::cout << "SERVER SIZE PARSSED" << serverConfigs->size() << std::endl;
+    // std::cout << "SERVER SIZE PARSSED" << serverConfigs->size() << std::endl;
     for (size_t i = 0; i < serverConfigs->size(); ++i) 
     {
         int sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -168,7 +168,7 @@ void WebServer::processClientRequests(int fd) {
         }
     }
 	client.saveRequestData(bytes_received);
-	//std::cout<< ">>>>>> REQUEST " <<client.getRequest().getRequestData() << std::endl;
+	// std::cout<< ">>>>>> REQUEST " <<client.getRequest().getRequestData() << std::endl;
     CheckRequestStatus(client);
     if (client.getRequest().get_requestStatus() == HttpRequest::REQUEST_READY) {
         // std::cout << "size of body " << client.getRequest().getBodysize();
@@ -200,9 +200,9 @@ void WebServer::run() {
         readcpy = this->readSet;
         writecpy = this->writeSet;
         this->highestFd = *std::max_element(this->serverSockets.begin(), this->serverSockets.end());
-        std::cout << "this->highestFd " << this->highestFd << std::endl;
+        // std::cout << "this->highestFd " << this->highestFd << std::endl;
         int maxFd = this->highestFd;
-        std::cout << "this->highestFd2 " << maxFd<< std::endl;
+        // std::cout << "this->highestFd2 " << maxFd<< std::endl;
         signal(SIGPIPE, SIG_IGN);
         if (select(maxFd + 1, &readcpy, &writecpy, NULL, NULL) < 0) {
             std::cerr << "Error in select()." << std::endl;
@@ -252,7 +252,6 @@ void WebServer::acceptNewClient(int serverSocket) {
     clients[clientSocket] = newClient;
     addSocketFd(clientSocket);
 }
-
 
 void WebServer::closeClient(int clientSocket) 
 {

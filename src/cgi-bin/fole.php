@@ -1,4 +1,4 @@
-#!/Users/user/Desktop/php-cgi
+#!/usr/bin/php-cgi
 <?php
 header('Content-Type: text/html');
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -16,8 +16,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     if (in_array($avatar_actual_ext, $allowed)) {
         if ($avatar_error === 0) {
-            if ($avatar_size < 1000000) {
-                echo 'hello';
+            if ($avatar_size < 1000000) 
+            {
                 $avatar_name_new = uniqid('', true) . '.' . $avatar_actual_ext;
                 $avatar_destination = './' . $avatar_name_new;
                 move_uploaded_file($avatar_tmp_name, $avatar_destination);

@@ -25,38 +25,40 @@ CGI& CGI::operator=(const CGI& cgi)
 
 void CGI::set_environmentVariables(std::string& file_name)
 {
-	std::vector<std::string> envs;
-	std::map<std::string, std::string> &headers = this->client.getRequest().getHeaderFields();
-	HttpRequest &request = this->client.getRequest();
+    std::vector<std::string> envs;
+    std::map<std::string, std::string> &headers = this->client.getRequest().getHeaderFields();
+    HttpRequest &request = this->client.getRequest();
 
-	envs.push_back("CONTENT_TYPE="+ headers["Content-Type"]);
-	envs.push_back("REDIRECT_STATUS=200");
-	envs.push_back("CONTENT_LENGTH=" + headers["Content-Length"]);
-	envs.push_back("HTTP_COOKIE=" + headers["Cookie"]);
-	envs.push_back("HTTP_USER_AGENT=" + headers["User-Agent"]);
-	envs.push_back("PATH_INFO=");
-	envs.push_back("QUERY_STRING=" + request.get_queryString());
-	envs.push_back("REMOTE_ADDR=");
-	envs.push_back("REMOTE_HOST=");
-	envs.push_back("REQUEST_METHOD=" + request.getMethod());
-	//std::cout << "FILE NAME" << file_name;
-	envs.push_back("SCRIPT_NAME="+ file_name);
-	envs.push_back("SERVER_NAME="+headers["Host"]);
-	envs.push_back("SERVER_SOFTWARE=HTTP/1.1");
-	// std::cout << "URI**********:"<<request.get_uri() << std::endl;
-	envs.push_back("SCRIPT_FILENAME="+ this->_filePath);
-	envs.push_back("REQUEST_URI="+ this->_filePath);
-	// std::vector<std::string>::iterator it;
-	// for (it = envs.begin(); it != envs.end() ;++it)
-	//  	std::cout << *it << std::endl;
-	this->env = new char*[envs.size() + 1];
-	size_t i = 0;
-	for (i = 0; i < envs.size(); i++)
-	{
-		this->env[i] = new char[envs[i].size() + 1];
-		strcpy(this->env[i], envs[i].c_str());
-	}
-	this->env[i] = NULL;
+    std::string method = request.getMethod();
+    // std::cout << "Requestt method: " << method << std::endl;
+
+    // std::cout << "Content-Type: " << headers["Content-Type"] << std::endl;
+    // std::cout << "Content-Length: " << headers["Content-Length"] << std::endl;
+
+    envs.push_back("CONTENT_TYPE=" + headers["Content-Type"]);
+    envs.push_back("REDIRECT_STATUS=200");
+    envs.push_back("CONTENT_LENGTH=" + headers["Content-Length"]);
+    envs.push_back("HTTP_COOKIE=" + headers["Cookie"]);
+    envs.push_back("HTTP_USER_AGENT=" + headers["User-Agent"]);
+    envs.push_back("PATH_INFO=");
+    envs.push_back("QUERY_STRING=" + request.get_queryString());
+    envs.push_back("REMOTE_ADDR=");
+    envs.push_back("REMOTE_HOST=");
+    envs.push_back("REQUEST_METHOD=" + method);
+    envs.push_back("SCRIPT_NAME=" + file_name);
+    envs.push_back("SERVER_NAME=" + headers["Host"]);
+    envs.push_back("SERVER_SOFTWARE=HTTP/1.1");
+    envs.push_back("SCRIPT_FILENAME=" + this->_filePath);
+    envs.push_back("REQUEST_URI=" + this->_filePath);
+
+    this->env = new char*[envs.size() + 1];
+    size_t i = 0;
+    for (i = 0; i < envs.size(); i++)
+    {
+        this->env[i] = new char[envs[i].size() + 1];
+        strcpy(this->env[i], envs[i].c_str());
+    }
+    this->env[i] = NULL;
 }
 
 
@@ -74,7 +76,6 @@ void CGI::RUN()
 
 
 	std::string path(this->_filePath);
-	//std::cout << path << "*************"<< std::endl;
 	char* tmp_arg = new char[path.size() + 1];
 	strcpy(tmp_arg, path.c_str());
 
@@ -90,6 +91,7 @@ void CGI::RUN()
 			
 	}
 		
+	// std::cout << this->client.getRequest().get_bodyFileName().c_str() << std::endl;
 	tmp = std::tmpfile();
 	fdOut = fileno(tmp);
 	pid = fork();
@@ -120,7 +122,7 @@ void CGI::RUN()
 		close(fdOut);
 		fclose(tmp);
 	
-		execve(args[0], args, NULL);
+		execve(args[0], args, this->env);
 		std::string errorContent = "Content-Type: text/html\r\n\r\n<html><body style='text-align:center;'><h1>500 Internal Eeeeeerror</h1></body></html>";
         write(STDOUT_FILENO, errorContent.c_str(), errorContent.size());
 		std::exit(EXIT_FAILURE);
@@ -168,7 +170,7 @@ void CGI::RUN()
 		char *tmp_str = new char[response.size() + 1];
 		strcpy(tmp_str, response.c_str());
 		this->client.set_Response(tmp_str, response.size());
-		std::cout << tmp_str << response.size() << std::endl;
+		// std::cout << tmp_str << response.size() << std::endl;
 		delete[] tmp_str;
 		if (this->client.getRequest().getMethod() == "POST")
 			close(fdIn);
