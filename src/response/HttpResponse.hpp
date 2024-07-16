@@ -77,6 +77,7 @@ class HttpResponse {
 		bool	_isText;
 		bool	_slashSetted;
 		std::map<std::string, std::string>	_interpreter;
+		std::string	_cookie;
 
 		void	_handleDefaultErrors();
 		bool	_isSupportedMethod(std::string meth);
@@ -93,6 +94,6 @@ class HttpResponse {
 
 std::string getContentType(std::string filename);
 std::string	getMimeTypes(std::string flag, std::string extension);
-std::string findDirname(const std::string& path, const std::string& root);
+std::string findDirName(const std::string& path, const std::string& root);
 
 #endif

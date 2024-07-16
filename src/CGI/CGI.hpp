@@ -38,7 +38,3 @@ class CGI
 };
 
 #endif
-
-
-
-	

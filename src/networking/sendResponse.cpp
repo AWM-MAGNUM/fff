@@ -61,15 +61,15 @@ void WebServer::sendResponse(HttpRequest &req, NetworkClient &client)
 	{
         client.setResponse(client.getResponseHeader());
         client.setHeaderSent(true);
-      //  std::cout << client.getResponse();
+        // std::cout << client.getResponse();
     }
 	else 
 	{
-        if (!client.getResponseBody().empty()) 
+        if (!client.getResponseBody().empty())
 		{
             char buffer[1024];
             if (resp.isText() == true) {
-                // std::cout << "{{{{ "<< client.getResponseBody() << " }}}}}}}}}}"<< std::endl;
+                //std::cout << "ewew"<<client.getResponseBody() << std::endl;
                 ssize_t bytesSent = send(client.fetchConnectionSocket(), client.getResponseBody().c_str(), client.getResponseBody().length(), 0);
 				if (bytesSent < 0 || bytesSent == (int)client.getResponseBody().length()) {
                     std::remove(req.get_bodyFileName().c_str());
@@ -106,15 +106,12 @@ void WebServer::sendResponse(HttpRequest &req, NetworkClient &client)
         }
         else {
             closeClient(client.fetchConnectionSocket());
-                return;
+            return;
         }
     }
 
     ssize_t bytesSent = send(client.fetchConnectionSocket(), client.getResponse().c_str(), client.getResponse().length(), 0);
-    // std::cout << "++++++++++  " << client.fetchConnectionSocket() << "++++++++++++++++"<< "\n";
-    // std::cout << "BytesSent: " << bytesSent << "\n";
     if (bytesSent <= 0) {
-        // std::remove(req.get_bodyFileName().c_str());
         closeClient(client.fetchConnectionSocket());
     }
 }

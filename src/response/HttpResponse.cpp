@@ -23,7 +23,8 @@ HttpResponse::HttpResponse(NetworkClient &client) :
 	_contentType(""),
     _reqHeader(), 
     _isText(false),
-    _slashSetted(false)
+    _slashSetted(false),
+    _cookie("")
     {}
 
 HttpResponse::~HttpResponse(){}
@@ -61,10 +62,12 @@ void	HttpResponse::_handleDefaultErrors() {
 
 void	HttpResponse::generateResponse(HttpRequest &req) {
 	_errCode = req.getErrorCode();
+    _cookie = req.getCookie();
 	// std::cout << "errcode result from req:" << _errCode << "\n";
 	// std::cout << "filePath loli: "<< _filePath << "\n";
 	_uri = getRequestedResource(req);
 	_filePath = deleteRedundantSlash(_uri);
+    _reqHeader = req.getHeaderFields();
 	if (_filePath.empty()) {
 		buildResponse(404);
 		return;
@@ -86,18 +89,15 @@ void	HttpResponse::generateResponse(HttpRequest &req) {
 		return;
 	}
 	if (req.getMethod() == "GET") {
-        // std::cout << "GEET============" << std::endl;
 	 	handleGetMethod();
 		return ;
 	}
-	else if (req.getMethod() == "POST") {
-        // std::cout << "POSSSTT" << std::endl;
+	if (req.getMethod() == "POST") {
         _bodyFileName = req.get_bodyFileName();
-        _reqHeader = req.getHeaderFields();
 		handlePostMethod();
 		return ;
 	}
-	else if (req.getMethod() == "DELETE") {
+	if (req.getMethod() == "DELETE") {
 		handleDeleteMethod(); //where u put the Delete method
 		return ;
 	}
@@ -184,26 +184,91 @@ std::string HttpResponse::generateDate()
     return (std::string(date_buffer));
 }
 
-std::string	HttpResponse::createResponseHeader(int errCode, std::string flag) {
-	std::string	respHeader;
-      if (!this->cookies.empty())
-      {
-        _headers["Set-Cookie"] += this->cookies;
-      }
-        
-	_headers["Server"] = "Webserv/1.0";
-	if (!_redirection.empty()) {
-		_headers["Location"] = _redirection;
-		_errCode = 301;
-	}
+// std::string	HttpResponse::createResponseHeader(int errCode, std::string flag) {
+// 	std::string	respHeader;
+
+// 	_headers["Server"] = "Webserv/1.0";
+// 	if (!_redirection.empty()) {
+// 		_headers["Location"] = _redirection;
+// 		_errCode = 301;
+// 	}
+//     if (flag == "Default") {
+//         if (!_errorPath.empty()) {
+//             _headers["Content-Length"] = getContentLength(_errorPath);
+//             _isText = false;
+//         }
+// 		else {
+// 			std::stringstream sse;
+//             findStatusCode(errCode);
+//             sse << "<!DOCTYPE html>";
+//             sse << "<html>";
+//             sse << "<head><title>" << errCode << "</title></head>";
+//             sse << "<body>";
+//             sse << "<center><h1>" << _statusCode << "</h1></center>";
+//             sse << "<hr><center>Welcome to our Webserv</center>";
+//             sse << "</body>" << "</html>";
+//             _errorPath = sse.str();
+//     		_fileSize = _errorPath.size();
+// 			_headers["Content-Length"] = toString(_fileSize);
+//             _isText = true;
+//         }
+//     	_headers["Content-Type"] = "text/html";
+//         if (_errCode == 201) {
+//             _headers["Content-Type"] = _contentType;
+//             _errorPath = "";
+// 			_headers["Content-Length"] = "0";
+//             // _isText = false;
+//         }
+// 	}
+//     else {
+//         if (_headers.find("Content-Length") == _headers.end()) {
+// 		    _headers["Content-Length"] = getContentLength(_filePath);
+//         }
+//         // if (_headers.find("Content-Type") == _headers.end())
+//         // {
+//         //     std::cout << "kidkhol hna\n";
+//         //     _headers["Content-Type"] = getContentType(_filePath);
+//         // }
+// 		// else
+//         _headers["Content-Type"] = _contentType;
+// 	}
+//     if (!_cookie.empty()) {
+//         _headers["Set-Cookie"] = "";
+//     }
+// 	_headers["Date"] = generateDate();
+// 	std::stringstream ss;
+
+// 	findStatusCode(errCode);
+// 	_errCode = errCode;
+//     if (_errCode == 0)
+//         findStatusCode(0);
+//     ss << "HTTP/1.1 " << _statusCode << "\r\n";
+//     for (std::map<std::string, std::string>::iterator it = _headers.begin(); it != _headers.end(); it++)
+// 	{
+// 		ss << it->first << ": " << it->second << "\r\n";
+// 	}
+// 	ss << "\r\n";
+// 	_buffer = ss.str();
+// 	return _buffer;
+// }
+
+
+std::string HttpResponse::createResponseHeader(int errCode, std::string flag) {
+    std::string respHeader;
+
+    _headers["Server"] = "Webserv/1.0";
+    if (!_redirection.empty()) {
+        _headers["Location"] = _redirection;
+        _errCode = 301;
+    }
     if (flag == "Default") {
         if (!_errorPath.empty()) {
             _headers["Content-Length"] = getContentLength(_errorPath);
             _isText = false;
-        }
-		else {
-			std::stringstream sse;
+        } else {
+            std::stringstream sse;
             findStatusCode(errCode);
+            sse << "<!DOCTYPE html>";
             sse << "<html>";
             sse << "<head><title>" << errCode << "</title></head>";
             sse << "<body>";
@@ -211,41 +276,44 @@ std::string	HttpResponse::createResponseHeader(int errCode, std::string flag) {
             sse << "<hr><center>Welcome to our Webserv</center>";
             sse << "</body>" << "</html>";
             _errorPath = sse.str();
-    		_fileSize = _errorPath.size();
-			_headers["Content-Length"] = toString(_fileSize);
+            _fileSize = _errorPath.size();
+            _headers["Content-Length"] = toString(_fileSize);
             _isText = true;
         }
-    	_headers["Content-Type"] = "text/html";
+        _headers["Content-Type"] = "text/html";
         if (_errCode == 201) {
             _headers["Content-Type"] = _contentType;
-            // _isText = false;
+            _errorPath = "";
+            _headers["Content-Length"] = "0";
         }
-	}
-    else {
-		_headers["Content-Length"] = getContentLength(_filePath);
-        // if (_headers.find("Content-Type") == _headers.end())
-        // {
-        //     std::cout << "hereee\n";
-        //     _headers["Content-Type"] = getContentType(_filePath);
-        // }
-		// else
-            _headers["Content-Type"] = _contentType;
-	}
-	_headers["Date"] = generateDate();
-	std::stringstream ss;
-	findStatusCode(errCode);
-	_errCode = errCode;
+    } else {
+        if (_headers.find("Content-Length") == _headers.end()) {
+            _headers["Content-Length"] = getContentLength(_filePath);
+        }
+        _headers["Content-Type"] = _contentType;
+    }
+    if (!_cookie.empty()) {
+        _headers["Set-Cookie"] = _cookie;
+        // Ajout du journal pour vérifier `Set-Cookie`
+        std::ofstream logFile("cgi_debug.log", std::ios_base::app);
+        logFile << "Set-Cookie: " << _cookie << std::endl;
+    }
+    _headers["Date"] = generateDate();
+    std::stringstream ss;
+
+    findStatusCode(errCode);
+    _errCode = errCode;
     if (_errCode == 0)
         findStatusCode(0);
     ss << "HTTP/1.1 " << _statusCode << "\r\n";
-    for (std::map<std::string, std::string>::iterator it = _headers.begin(); it != _headers.end(); it++)
-	{
-		ss << it->first << ": " << it->second << "\r\n";
-	}
-	ss << "\r\n";
-	_buffer = ss.str();
-	return _buffer;
+    for (std::map<std::string, std::string>::iterator it = _headers.begin(); it != _headers.end(); ++it) {
+        ss << it->first << ": " << it->second << "\r\n";
+    }
+    ss << "\r\n";
+    _buffer = ss.str();
+    return _buffer;
 }
+
 
 void	HttpResponse::buildResponse(int errCode) {
 	_errCode = errCode;
@@ -254,6 +322,7 @@ void	HttpResponse::buildResponse(int errCode) {
     std::string header = createResponseHeader(_errCode, "Default");
 
     _client.setResponseHeader(header);
+    std::cout << _errorPath << "\n";
     _client.setResponseBody(_errorPath);
 }
 
@@ -344,7 +413,7 @@ std::string	HttpResponse::getRequestedResource(HttpRequest &req) {
                 {
                     // std::cout << "ma fhamtch1\n";
                     std::string hostt = _serv.getHost() + ":" + toString(_serv.getPort());
-                    std::string dirdir = _location.getLocationName().empty() ? findDirname(_filePath, _root) + "/" : _location.getLocationName() + findDirname(_filePath, _root) + "/";
+                    std::string dirdir = _location.getLocationName().empty() ? findDirName(_filePath, _root) + "/" : _location.getLocationName() + findDirName(_filePath, _root) + "/";
                     // std::cout << _filePath << " lastdir: " << dirdir<< "\n";
                     _redirection = "http://" + hostt + dirdir;
                     return _filePath;
@@ -376,7 +445,7 @@ std::string	HttpResponse::getRequestedResource(HttpRequest &req) {
         {
             // std::cout << "ma fhamtch2\n";
             std::string hostt = _serv.getHost() + ":" + toString(_serv.getPort());
-            std::string dirdir = _location.getLocationName().empty() ? findDirname(_filePath, _root) + "/" : _location.getLocationName() + findDirname(_filePath, _root) + "/";
+            std::string dirdir = _location.getLocationName().empty() ? findDirName(_filePath, _root) + "/" : _location.getLocationName() + findDirName(_filePath, _root) + "/";
             // std::cout << _filePath << " lastdir: " << dirdir<< "\n";
             _redirection = "http://" + hostt + dirdir;
             return _filePath;

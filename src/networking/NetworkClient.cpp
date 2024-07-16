@@ -205,10 +205,12 @@ void NetworkClient::setResponse(std::string response) {
     this->_response = response;
     this->_respSize = response.size();
 }
+
 void NetworkClient::set_Response(std::string response, size_t RespSize) {
     this->_response = response;
     this->_respSize = RespSize;
 }
+
 void    NetworkClient::setOpenFile(bool value) {
     this->_openFile = value;
 }
@@ -216,7 +218,6 @@ void    NetworkClient::setOpenFile(bool value) {
 bool    NetworkClient::getOpenFile() {
     return this->_openFile;
 }
-
 
 void NetworkClient::openFileForReading() {
     _file.open(getResponseBody().c_str(), std::ios::in | std::ios::binary);

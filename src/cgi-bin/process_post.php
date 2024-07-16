@@ -1,4 +1,6 @@
 #!/usr/bin/php-cgi
+<!DOCTYPE html>
+<html lang="en">
 <?php
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (isset($_POST["name"])) {
@@ -11,3 +13,4 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     echo "Error! Method not allowed.";
 }
 ?>
+</html>

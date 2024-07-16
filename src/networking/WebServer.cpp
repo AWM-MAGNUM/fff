@@ -14,13 +14,9 @@ std::string trimm(const std::string& str)
 NetworkClient& WebServer::GetRightClient(int fd) 
 {
     std::map<int, NetworkClient>::iterator it = this->clients.find(fd);
-    if (it != this->clients.end())
-    {
-        // std::cout << "6" << std::endl;
-     	// 		std::cout << "((()))" <<it->second.getRequest().getUri() << std::endl;
+    if (it != this->clients.end()) {
         return it->second;
     }
-        
     else
         throw std::runtime_error("BUG: Potential Server error");
 }
@@ -69,14 +65,13 @@ void setSocketNonBlocking(int socket_fd)
 
 void WebServer::addSocketFd(int fd)
 {
-	// std::cout << "PUSHBACKTIMES" << std::endl;
 	this->serverSockets.push_back(fd);
 	FD_SET(fd, &(this->readSet));
 }
+
 void WebServer::setupServerSockets() 
 {
-    // std::cout << "SERVER SIZE PARSSED" << serverConfigs->size() << std::endl;
-    for (size_t i = 0; i < serverConfigs->size(); ++i) 
+     for (size_t i = 0; i < serverConfigs->size(); ++i) 
     {
         int sockfd = socket(AF_INET, SOCK_STREAM, 0);
         if (sockfd < 0) 
@@ -112,8 +107,8 @@ void WebServer::setupServerSockets()
             continue;
         }
         addSocketFd(sockfd);
-        //you should add the one of write
         FD_SET(sockfd, &this->masterSet);
+        //you should add the one of write
         if (sockfd > highestFd) 
             this->highestFd = sockfd;
        
@@ -168,9 +163,12 @@ void WebServer::processClientRequests(int fd) {
         }
     }
 	client.saveRequestData(bytes_received);
-	// std::cout<< ">>>>>> REQUEST " <<client.getRequest().getRequestData() << std::endl;
+	// std::cout<< client.getRequest().getRequestData() << std::endl;
     CheckRequestStatus(client);
     if (client.getRequest().get_requestStatus() == HttpRequest::REQUEST_READY) {
+        // std::cout << "Meth: " << client.getRequest().getMethod() <<  "\n";
+    // client.getRequest().printHeaders();
+    // std::cout << "\n";
         // std::cout << "size of body " << client.getRequest().getBodysize();
     //     std::string hostHeader = client.getRequest().getHeader("Host");
     //     hostHeader = trimm(hostHeader);
@@ -251,7 +249,11 @@ void WebServer::acceptNewClient(int serverSocket) {
     newClient.setServer(associatedServer);
     clients[clientSocket] = newClient;
     addSocketFd(clientSocket);
+    // FD_SET(clientSocket, &this->readSet);
+    // if (clientSocket > highestFd)
+    //     highestFd = clientSocket;
 }
+
 
 void WebServer::closeClient(int clientSocket) 
 {

@@ -3,7 +3,7 @@
 bool	HttpResponse::_isSupportedUploadPath() {
     // Find upload path logic
 	if (_uploadPath.empty()) {
-		buildResponse(405);
+		// buildResponse(404);
 		return 0;
 	}
     return 1;
@@ -17,7 +17,7 @@ void	HttpResponse::_createFile(std::string &filename) {
         file.close();
 		this->_errCode = 201;
 		std::string hostt = _serv.getHost() + ":" + toString(_serv.getPort());
-		std::string dirdir = findDirname(_uploadPath, _root) + "/";
+		std::string dirdir = findDirName(_uploadPath, _root) + "/";
 		// std::cout << "dir " << dirdir << "\n";
 		_headers["Location"] = "http://" + hostt + dirdir + filename;
 		buildResponse(201);
@@ -137,13 +137,7 @@ void HttpResponse::handlePostMethod() {
 }
 
 void	HttpResponse::_postRequestFile() {
-    
     if (_filePath.find(".py") != std::string::npos || _filePath.find(".php") != std::string::npos) {
-        // std::ifstream bodyfile(_bodyFileName.c_str());
-        // std::ostringstream filecontent;
-        // filecontent << bodyfile.rdbuf();
-        // _postBody += filecontent.str();
-        // bodyfile.close();
 
         CGI cgi(_client, _filePath);
         std::string script_name = Get_File_Name_From_URI();
@@ -167,12 +161,13 @@ void	HttpResponse::_postRequestFile() {
         std::string response_cgi = _client.getResponse();
         _contentType = findContentTypePOST(response_cgi);
         _client.setResponseBody(extractBodyPOST(_client.getResponse()));
+
         std::stringstream ss;
-        // ss << "HTTP/1.1 200 OK\r\n\r\n";
         ss << _client.getResponseBody().length();
         std::string body_length = ss.str();
+        _headers["Content-Length"] = body_length;
         _client.setResponseHeader(createResponseHeader(200, "Nothing"));
-    //    std::cout << " ******CGI RESPONSE POST:  " <<  << "******"<<std::endl;
+        _isText = true;
     }
     else {
 		buildResponse(403);
@@ -184,7 +179,7 @@ void	HttpResponse::isUrihasSlashInTHeEnd() {
 	if ((_root[_root.size() - 1]) != '/' && _client.getRequest().getUri()[urisize - 1] != '/')
 	{
 		std::string hostt = _serv.getHost() + ":" + toString(_serv.getPort());
-        std::string dirdir = _location.getLocationName().empty() ? findDirname(_filePath, _root) + "/" : _location.getLocationName() + findDirname(_filePath, _root) + "/";
+        std::string dirdir = _location.getLocationName().empty() ? findDirName(_filePath, _root) + "/" : _location.getLocationName() + findDirName(_filePath, _root) + "/";
         // std::cout << _filePath << " lastdir: " << dirdir<< "\n";
        _redirection = "http://" + hostt + dirdir;
 	   std::string header = createResponseHeader(301, "Default");

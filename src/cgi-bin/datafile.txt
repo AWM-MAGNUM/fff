@@ -1,2 +1,0 @@
-First line in the data file.
-Second line in the data file.

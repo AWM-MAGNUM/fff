@@ -14,7 +14,6 @@ std::string HttpResponse::_constructPath(const std::string& requestPath, const s
         path += "/" + index;
     }
     std::string filePath = root + path;
-		// std::cout << root << " + " << path << " =>  " << filePath << "\n";
     return filePath;
 }
 
@@ -80,7 +79,7 @@ bool HttpResponse::isDirHasIndexFiles() {
 //     return lastDirName;
 // }
 
-std::string findDirname(const std::string& path, const std::string& root)
+std::string findDirName(const std::string& path, const std::string& root)
 {
 	// Ensure root ends with '/'
     std::string adjustedRoot = root;
@@ -115,7 +114,7 @@ void	HttpResponse::_getAutoIndex() {
     	if (dir == NULL) {
         	return;
     	}
-		std::string directory = _location.getLocationName().empty() ? findDirname(_filePath, _root) + "/" : _location.getLocationName() + findDirname(_filePath, _root) + "/";
+		std::string directory = _location.getLocationName().empty() ? findDirName(_filePath, _root) + "/" : _location.getLocationName() + findDirName(_filePath, _root) + "/";
 		// _findDirectoryName();
 		// std::cout << directory << "\n";
 
@@ -174,7 +173,6 @@ void	HttpResponse::_getAutoIndex() {
 			buildResponse(_errCode);
 			return;
 		}
-		// std::cout << _filePath << "\n";
 		_contentType = getContentType(_filePath);
 		_client.setResponseHeader(createResponseHeader(200, "Nothing"));
 	}
@@ -261,7 +259,7 @@ std::string findContentType(std::string response)
     return contentType;
 }
 
-void 	HttpResponse::_isFile() 
+void	HttpResponse::_isFile() 
 {
     // Handle file
 	std::string script_name = Get_File_Name_From_URI();
@@ -286,29 +284,29 @@ void 	HttpResponse::_isFile()
 			std::string cgi_headers = extractHeaders(_client.getResponse());
 			//std::cout << "Headers CGI: " << cgi_headers << "\n";
 			pos = cgi_headers.find("Set-Cookie");
-				if (pos != std::string::npos)
-				{
-					cgi_headers = cgi_headers.substr(pos);
-					pos = cgi_headers.find("\r\n");
-					this->cookies = cgi_headers.substr(0, pos);
-					//std::cout << "COOOKIEEES:"<<this->cookies << std::endl;
-				}
-				 std::string response_cgi = _client.getResponse();
-				
-				_contentType = findContentType(response_cgi);
-				//std::cout << " ******CGI RESPONSE:  " << extractBody(_client.getResponse()) << "******"<<std::endl;
-				_client.setResponseBody(extractBody(_client.getResponse()));
-				// std::cout << _client.getBODY() << std::endl;
-				_client.setResponseHeader(createResponseHeader(200, "Nothing"));
-				_isText = true;
-				return;
+			if (pos != std::string::npos)
+			{
+				cgi_headers = cgi_headers.substr(pos);
+				pos = cgi_headers.find("\r\n");
+				this->cookies = cgi_headers.substr(0, pos);
 			}
+			std::string response_cgi = _client.getResponse();
+			_contentType = findContentType(response_cgi);
+			_client.setResponseBody(extractBody(_client.getResponse()));
+			std::stringstream ss;
+			ss << _client.getResponseBody().length();
+			std::string body_length = ss.str();
+			_headers["Content-Length"] = body_length;
+			_client.setResponseHeader(createResponseHeader(200, "Nothing"));
+			_isText = true;
+			return;
+		}
 		// std::cout << "the file exist: " << _filePath<< "\n";
 		_contentType = getContentType(_filePath);
 		std::string header = createResponseHeader(200, "Nothing");
 		_client.setResponseHeader(header);
 		_client.setResponseBody(_filePath);
-						// std::cout << _client.getResponseBody() << std::endl;
+		// std::cout << _client.getResponseBody() << std::endl;
 
 		return ;
 	}
