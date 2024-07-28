@@ -88,7 +88,7 @@ ConfigServer Config::parseServerConfig(std::vector<t_tokens>::iterator& it) {
 		throw ParseServerException("Error: Should have one listen parametre.");
 	else if (serv > 1)
 		throw ParseServerException("Error: Must have one server_name parametre.(Duplicate)");
-	else if (rt > 1)
+	else if (rt != 1)
 		throw ParseServerException("Error: Must have one root parametre.(Duplicate)");
 	else if (loc < 1)
 		throw ParseServerException("Error: Should have at least one block of location.");
@@ -96,10 +96,9 @@ ConfigServer Config::parseServerConfig(std::vector<t_tokens>::iterator& it) {
 		throw ParseServerException("Error: Must have one body_size parametre.(Duplicate)");
 	else if (aut > 1)
 		throw ParseServerException("Error: Must set one autoindex parametre.(Duplicate)");
-	else if ((rt == 1 && ind != 1) || ind > 1)
+	else if (ind > 1)
 		throw ParseServerException("Error: Should have one index parametre.(Duplicate)...");
-	else if (err > 1)
-		throw ParseServerException("Error: Must set one error_page parametre.(Duplicate)");
+
 	// std::cout << "end of server\n";
 	if (it->_type != "}")
 		throw ParseServerException("Error: expected '}' in the end of server directive.");

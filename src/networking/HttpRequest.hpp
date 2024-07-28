@@ -77,6 +77,7 @@ class HttpRequest
 		std::string& getRequestData();
 
 		bool is_body();
+		void setErrorCode(int code);
 };
 
 int	hexToInt(const std::string& str);

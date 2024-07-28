@@ -3,14 +3,7 @@
 CGI::CGI(NetworkClient &client, std::string &filePath) : env(NULL) ,client(client), _filePath(filePath), status_code(200) {}
 
 
-CGI::~CGI() {
-    // if (env) {
-    //     for (size_t i = 0; env[i] != NULL; ++i) {
-    //         delete[] env[i];
-    //     }
-    //     delete[] env;
-    // }
-}
+CGI::~CGI() {}
 
 
 CGI::CGI(const CGI& cgi) : client(cgi.client), status_code(200)
@@ -83,22 +76,35 @@ char** CGI::get_CGIenvironmentVariables()
 //     int fdOut = 1;
 //     FILE* tmp = std::tmpfile();
 
-//     // Log script start
-//     std::ofstream logFile("cgi_debug.log", std::ios_base::app);
-//     logFile << "CGI script started at: " << time(NULL) << "\n";
-//     logFile << "Request URI: " << this->client.getRequest().getUri() << "\n";
-//     logFile << "Request Method: " << this->client.getRequest().getMethod() << "\n";
-
 
 //     std::string path(this->_filePath);
-//     char* tmp_arg = new char[path.size() + 1];
-//     strcpy(tmp_arg, path.c_str());
+//     std::string interpreter;
 
-//     char *args[] = {tmp_arg, NULL};
+//     if (path.size() >= 4 && path.compare(path.size() - 4, 4, ".php") == 0)
+//         interpreter = "/usr/bin/php-cgi";
+//     else if (path.size() >= 3 && path.compare(path.size() - 3, 3, ".py") == 0)
+//         interpreter = "/usr/bin/python3";
+//     else {
+//         std::cout << "Error: Unknown file extension." << std::endl;
+//         this->status_code = 500;
+//         fclose(tmp);
+//         return;
+//     }
+
+//     // echec exevve
+//     // interpreter = "/invalid/path/to/interpreter";
+
+//     char* interp_arg = new char[interpreter.size() + 1];
+//     strcpy(interp_arg, interpreter.c_str());
+
+//     char* script_arg = new char[path.size() + 1];
+//     strcpy(script_arg, path.c_str());
+
+//     char *args[] = {interp_arg, script_arg, NULL};
+
 //     if (this->client.getRequest().getMethod() == "POST") {
 //         fdIn = open(this->client.getRequest().get_bodyFileName().c_str(), O_RDONLY);
 //         if (!fdIn) {
-//             logFile << "Failed to open input file\n";
 //             this->status_code = 500;
 //             std::exit(EXIT_FAILURE);
 //         }
@@ -109,14 +115,14 @@ char** CGI::get_CGIenvironmentVariables()
 //     pid = fork();
 
 //     if (pid == -1) {
-//         logFile << "Fork failed\n";
+       
 //         std::string errorContent = "Content-Type: text/html\r\n\r\n<html><body style='text-align:center;'><h1>500 Internal Server Error</h1></body></html>";
 //         write(STDOUT_FILENO, errorContent.c_str(), errorContent.size());
 //         this->status_code = 500;
 //         std::exit(EXIT_FAILURE);
 //     } else if (pid == 0) {
 //         if (dup2(fdIn, 0) == -1 || dup2(fdOut, 1) == -1) {
-//             logFile << "dup2 failed\n";
+           
 //             std::string errorContent = "Content-Type: text/html\r\n\r\n<html><body style='text-align:center;'><h1>500 Internal Server Error</h1></body></html>";
 //             write(STDOUT_FILENO, errorContent.c_str(), errorContent.size());
 //             this->status_code = 500;
@@ -129,7 +135,7 @@ char** CGI::get_CGIenvironmentVariables()
 //         fclose(tmp);
 
 //         execve(args[0], args, this->env);
-//         logFile << "execve failed\n";
+       
 //         std::string errorContent = "Content-Type: text/html\r\n\r\n<html><body style='text-align:center;'><h1>500 Internal Server Error</h1></body></html>";
 //         write(STDOUT_FILENO, errorContent.c_str(), errorContent.size());
 //         this->status_code = 500;
@@ -148,9 +154,10 @@ char** CGI::get_CGIenvironmentVariables()
 //             kill(pid, SIGKILL);
 //         }
 
-//         delete[] tmp_arg;
+//         delete[] interp_arg;
+//         delete[] script_arg;
 
-//         // Free array of CGI environment variables
+     
 //         int i = 0;
 //         while(this->env[i]) {
 //             delete[] this->env[i];
@@ -158,7 +165,7 @@ char** CGI::get_CGIenvironmentVariables()
 //         }
 //         delete[] this->env;
 
-//         // Read response
+
 //         char buffer[1024];
 //         ssize_t bytes;
 //         std::string response;
@@ -177,8 +184,6 @@ char** CGI::get_CGIenvironmentVariables()
 //         close(fdOut);
 //         fclose(tmp);
 //     }
-
-//     logFile << "CGI script ended\n";
 // }
 
 
@@ -188,77 +193,113 @@ void CGI::RUN() {
     int fdOut = 1;
     FILE* tmp = std::tmpfile();
 
-    std::ofstream logFile("cgi_debug.log", std::ios_base::app);
-    logFile << "CGI script started at: " << time(NULL) << std::endl;
-    logFile << "Request URI: " << this->client.getRequest().getUri() << std::endl;
-    logFile << "Request Method: " << this->client.getRequest().getMethod() << std::endl;
-
-    // Ajout d'un journal pour vérifier les en-têtes
-    std::map<std::string, std::string> &headers = this->client.getRequest().getHeaderFields();
-    for (std::map<std::string, std::string>::iterator it = headers.begin(); it != headers.end(); ++it) {
-        logFile << it->first << ": " << it->second << std::endl;
+    if (!tmp) {
+        std::cout << "Error: Unable to create temporary file." << std::endl;
+        this->status_code = 500;
+        return;
     }
 
     std::string path(this->_filePath);
-    char* tmp_arg = new char[path.size() + 1];
-    strcpy(tmp_arg, path.c_str());
+    std::string interpreter;
 
-    char *args[] = {tmp_arg, NULL};
+    if (path.size() >= 4 && path.compare(path.size() - 4, 4, ".php") == 0)
+        interpreter = "/usr/bin/php-cgi";
+    else if (path.size() >= 3 && path.compare(path.size() - 3, 3, ".py") == 0)
+        interpreter = "/usr/bin/python3";
+    else {
+        std::cout << "Error: Unknown file extension." << std::endl;
+        this->status_code = 500;
+        fclose(tmp);
+        return;
+    }
+
+    // interpreter = "/invalid/path/to/interpreter";
+
+    char* interp_arg = new char[interpreter.size() + 1];
+    strcpy(interp_arg, interpreter.c_str());
+
+    char* script_arg = new char[path.size() + 1];
+    strcpy(script_arg, path.c_str());
+
+    char *args[] = {interp_arg, script_arg, NULL};
+
     if (this->client.getRequest().getMethod() == "POST") {
         fdIn = open(this->client.getRequest().get_bodyFileName().c_str(), O_RDONLY);
         if (fdIn == -1) {
-            logFile << "Failed to open input file" << std::endl;
             this->status_code = 500;
-            std::exit(EXIT_FAILURE);
+            delete[] interp_arg;
+            delete[] script_arg;
+            fclose(tmp);
+            return;
         }
     }
 
-    tmp = std::tmpfile();
     fdOut = fileno(tmp);
-    pid = fork();
 
-    if (pid == -1) {
-        logFile << "Fork failed" << std::endl;
-        std::string errorContent = "Content-Type: text/html\r\n\r\n<html><body style='text-align:center;'><h1>500 Internal Server Error</h1></body></html>";
-        write(STDOUT_FILENO, errorContent.c_str(), errorContent.size());
+    int pipefd[2];
+    if (pipe(pipefd) == -1) {
+        std::cout << "Error: Pipe failed." << std::endl;
         this->status_code = 500;
-        std::exit(EXIT_FAILURE);
+        delete[] interp_arg;
+        delete[] script_arg;
+        if (fdIn != 0) close(fdIn);
+        fclose(tmp);
+        return;
+    }
+
+    pid = fork();
+    if (pid == -1) {
+        std::cout << "Error: Fork failed." << std::endl;
+        this->status_code = 500;
+        delete[] interp_arg;
+        delete[] script_arg;
+        if (fdIn != 0) close(fdIn);
+        fclose(tmp);
+        return;
     } else if (pid == 0) {
+        close(pipefd[0]);
         if (dup2(fdIn, 0) == -1 || dup2(fdOut, 1) == -1) {
-            logFile << "dup2 failed" << std::endl;
             std::string errorContent = "Content-Type: text/html\r\n\r\n<html><body style='text-align:center;'><h1>500 Internal Server Error</h1></body></html>";
             write(STDOUT_FILENO, errorContent.c_str(), errorContent.size());
             this->status_code = 500;
+            write(pipefd[1], "1", 1);
+            close(pipefd[1]);
+            delete[] interp_arg;
+            delete[] script_arg;
+            if (fdIn != 0) close(fdIn);
+            close(fdOut);
+            fclose(tmp);
             std::exit(EXIT_FAILURE);
         }
 
-        if (this->client.getRequest().getMethod() == "POST") close(fdIn);
+        if (this->client.getRequest().getMethod() == "POST")
+            close(fdIn);
         close(fdOut);
         fclose(tmp);
 
         execve(args[0], args, this->env);
-        logFile << "execve failed" << std::endl;
+
         std::string errorContent = "Content-Type: text/html\r\n\r\n<html><body style='text-align:center;'><h1>500 Internal Server Error</h1></body></html>";
         write(STDOUT_FILENO, errorContent.c_str(), errorContent.size());
-        this->status_code = 500;
+        write(pipefd[1], "1", 1);
+        close(pipefd[1]);
+        delete[] interp_arg;
+        delete[] script_arg;
         std::exit(EXIT_FAILURE);
-    } else if (pid > 0) {
-        int change_status = 200;
-        time_t start_time = time(NULL);
-        while (time(NULL) - start_time < 5) {
-            if (waitpid(pid, NULL, WNOHANG) == pid) {
-                change_status = -2;
-                break;
-            }
-        }
-        if (change_status != -2 && waitpid(pid, NULL, WNOHANG) != pid) {
-            this->status_code = 504;
-            kill(pid, SIGKILL);
-        }
+    } else {
+        close(pipefd[1]);
+        int status;
+        waitpid(pid, &status, 0);
 
-        delete[] tmp_arg;
+        char buf;
+        if (read(pipefd[0], &buf, 1) > 0) {
+            this->status_code = 500;
+        }
+        close(pipefd[0]);
 
-        // Free array of CGI environment variables
+        delete[] interp_arg;
+        delete[] script_arg;
+
         int i = 0;
         while(this->env[i]) {
             delete[] this->env[i];
@@ -266,7 +307,6 @@ void CGI::RUN() {
         }
         delete[] this->env;
 
-        // Read response
         char buffer[1024];
         ssize_t bytes;
         std::string response;
@@ -280,10 +320,11 @@ void CGI::RUN() {
         strcpy(tmp_str, response.c_str());
         this->client.set_Response(tmp_str, response.size());
         delete[] tmp_str;
-        if (this->client.getRequest().getMethod() == "POST") close(fdIn);
+        if (this->client.getRequest().getMethod() == "POST")
+            close(fdIn);
         close(fdOut);
         fclose(tmp);
-    }
 
-    logFile << "CGI script ended" << std::endl;
+        // std::cout << "Status Code: " << this->status_code << std::endl;
+    }
 }

@@ -32,8 +32,10 @@ class WebServer {
 	    void			run();
 	    NetworkClient&	GetRightClient(int fd);
 	    void			CheckRequestStatus(NetworkClient &client);
-
+		 void handleTimeouts();
 	private:
+		
+		void sendTimeoutResponse(NetworkClient& client);
 		void setupServerSockets();
 		void acceptNewClient(int serverSocket);
 		void closeClient(int clientSocket);
@@ -55,4 +57,3 @@ class WebServer {
 		int currentClientIndex;
 };
 #endif
-

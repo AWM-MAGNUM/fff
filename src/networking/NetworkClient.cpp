@@ -10,6 +10,7 @@ NetworkClient::NetworkClient() :
     _openFile(false),
     _response(""),
     bytesSent(0) {
+    updateLastActivityTime();
     std::memset(&clientDetails, 0, sizeof(clientDetails));
 }
 
@@ -166,6 +167,11 @@ ConfigServer& NetworkClient::getServer()
     return this->server;
 }
 
+void    NetworkClient::saveRequestData(size_t nb_bytes) {
+	std::string str_bytes(this->_buffer, nb_bytes);
+	this->_req.setRequestData(str_bytes);
+}
+
 void    NetworkClient::setRequest(HttpRequest req) {
     this->_req = req;
 }
@@ -243,4 +249,14 @@ void NetworkClient::setBytesSent(std::size_t bytes) {
 
 std::size_t NetworkClient::getBytesSent() const {
     return this->bytesSent;
+}
+
+bool NetworkClient::isTimedOut() const {
+    time_t now = time(0);
+    double secondsSinceLastActivity = difftime(now, lastActivityTime);
+    return secondsSinceLastActivity > 10;
+}
+
+void NetworkClient::updateLastActivityTime() {
+    lastActivityTime = time(0);
 }
